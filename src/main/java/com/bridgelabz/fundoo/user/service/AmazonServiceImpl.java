@@ -119,7 +119,6 @@ public class AmazonServiceImpl implements AmazonService {
 	}
 
 	private void deleteProfilePicFromS3Bucket(String fileURL) {
-		//Ex filename : https://s3.ap-south-1.amazonaws.com/fundoo-profile-pics/1554715934940-king.jpeg
 		if(fileURL != null && !fileURL.equals("")) { 
 		String fileName = getFileName(fileURL);
 		amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, fileName));
