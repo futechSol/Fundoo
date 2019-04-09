@@ -2,13 +2,19 @@ package com.bridgelabz.fundoo.user.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotEmpty;
+
+import com.bridgelabz.fundoo.note.model.Note;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /********************************************************************************************
  * Purpose : User class to capture the details of the FundooNotes user
@@ -24,7 +30,7 @@ public class User implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(updatable = false)
+	@Column(updatable = false)
 	private long id;
 	@NotEmpty
 	private String firstName;
@@ -40,13 +46,30 @@ public class User implements Serializable {
 	private LocalDateTime registrationDate;
 	private LocalDateTime modifiedDate;
 	private boolean isVerified;
+	// collaborator for notes
+	@JsonIgnore
+	@ManyToMany(mappedBy = "collaboratedUsers")//, cascade = { CascadeType.PERSIST,CascadeType.MERGE})
+	//@OnDelete(action = OnDeleteAction.CASCADE)
+	private List<Note> collaboratedNotes;
 
+	public List<Note> getCollaboratedNotes(){
+		return this.collaboratedNotes;
+	}
+	public boolean addCollaboratedNote(Note note) {
+		if(this.collaboratedNotes == null)
+			this.collaboratedNotes = new ArrayList<>();
+		return this.collaboratedNotes.add(note);	
+	}
+	public boolean removeCollaboratedNote(Note note) {
+		return this.collaboratedNotes.remove(note);
+	}
+	//
 	/**
 	 * default constructor
 	 */
 	public User() {
 	}
-	
+
 	public long getId() {
 		return id;
 	}

@@ -2,7 +2,9 @@ package com.bridgelabz.fundoo.note.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -21,6 +23,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import com.bridgelabz.fundoo.user.model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Note implements Serializable {
@@ -45,21 +48,46 @@ public class Note implements Serializable {
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	//@JsonIgnore
 	private User user;
-    
+
 	//@JsonIgnore
 	@ManyToMany(cascade = {
-		        CascadeType.PERSIST,
-		        CascadeType.MERGE
-		    })
+			CascadeType.PERSIST,
+			CascadeType.MERGE
+	})
 	@JoinTable(name = "note_label", joinColumns = @JoinColumn(name = "note_id"), 
-	           inverseJoinColumns = @JoinColumn(name = "label_id"))
+	inverseJoinColumns = @JoinColumn(name = "label_id"))
 	//@OnDelete(action = OnDeleteAction.CASCADE)
 	private Set<Label> labels;
+	//collaborator
+	@JsonIgnore
+	@ManyToMany(cascade = {
+			CascadeType.PERSIST,
+			CascadeType.MERGE
+	})
+	@JoinTable(name = "collaborator", joinColumns = @JoinColumn(name = "note_id"), 
+	inverseJoinColumns = @JoinColumn(name = "user_id"))
+	List<User> collaboratedUsers;
 
+	public boolean addCollaboratedUser(User user) {
+		return collaboratedUsers.add(user);
+	}
+	public boolean removeCollaboratedUser(User user) {
+			return collaboratedUsers.remove(user);
+	}
+	
+	public List<User> getCollaboratedUsers() {
+		return collaboratedUsers;
+	}
+	public void setCollaboratedUsers(List<User> collaboratedUsers) {
+		this.collaboratedUsers = collaboratedUsers;
+	}
+	//
 	/**
 	 * default constructor
 	 */
 	public Note() {
+		this.collaboratedUsers = new ArrayList<>();
+		this.addCollaboratedUser(this.user);
 	}
 
 	public void setId(long id) {
@@ -141,7 +169,7 @@ public class Note implements Serializable {
 	public void setTrashed(boolean isTrashed) {
 		this.isTrashed = isTrashed;
 	}
-	
+
 	public String getReminder() {
 		return reminder;
 	}
@@ -149,7 +177,7 @@ public class Note implements Serializable {
 	public void setReminder(String reminder) {
 		this.reminder = reminder;
 	}
-	
+
 	public Set<Label> getLabels() {
 		return labels;
 	}

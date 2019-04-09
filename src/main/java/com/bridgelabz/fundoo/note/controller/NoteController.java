@@ -24,6 +24,7 @@ import com.bridgelabz.fundoo.note.dto.ReminderDTO;
 import com.bridgelabz.fundoo.note.model.Note;
 import com.bridgelabz.fundoo.note.service.NoteService;
 import com.bridgelabz.fundoo.response.Response;
+import com.bridgelabz.fundoo.user.dto.LoginDTO;
 import com.bridgelabz.fundoo.util.ResponseInfo;
 
 @RestController
@@ -154,6 +155,24 @@ public class NoteController {
 		logger.info("token: " + token);
 		logger.trace("add reminder to note");
 		Response response = noteService.removeReminder(token, noteId);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	@PostMapping(value = "users/notes/{noteId}/collaborator")
+	public ResponseEntity<Response> addCollaborator(@RequestHeader String token, @PathVariable long noteId, @RequestBody LoginDTO email){
+		logger.info("token :    "+token);
+		logger.info("noteId :   "+ noteId);
+		logger.info("email      "+ email.getEmail());
+		logger.trace("add collaborator");
+		Response response = noteService.addCollaborator(noteId, token, email.getEmail());
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	@PutMapping(value = "users/notes/{noteId}/collaborator")
+	public ResponseEntity<Response> removeCollaborator(@RequestHeader String token, @PathVariable long noteId, @RequestBody LoginDTO email){
+		logger.info("token :    "+token);
+		logger.info("noteId :   "+ noteId);
+		logger.info("email      "+ email.getEmail());
+		logger.trace("add collaborator");
+		Response response = noteService.removeCollaborator(noteId, token, email.getEmail());
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 }

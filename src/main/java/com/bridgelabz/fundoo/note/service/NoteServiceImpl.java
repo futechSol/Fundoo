@@ -3,13 +3,13 @@ package com.bridgelabz.fundoo.note.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-
 import com.bridgelabz.fundoo.exception.NoteException;
 import com.bridgelabz.fundoo.exception.UserException;
 import com.bridgelabz.fundoo.note.dto.LabelDTO;
@@ -56,7 +56,7 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")), environment.getProperty("status.note.errorMessage"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.create.success"));
+					environment.getProperty("status.note.create.success"));
 		return response;
 	}
 
@@ -77,7 +77,7 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")), environment.getProperty("status.note.update.error"));
 		else 
 			response =  ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.update.success"));
+					environment.getProperty("status.note.update.success"));
 		return response;
 	}
 
@@ -119,7 +119,7 @@ public class NoteServiceImpl implements NoteService{
 		if(!(opUser.isPresent() && opUser.get().isVerified()))
 			throw new UserException(Integer.parseInt(environment.getProperty("status.login.errorCode")), environment.getProperty("status.user.existError"));
 		User user = opUser.get();
-		List<Note> allNotes = noteRepository.findAllByUser(user);
+		List<Note> allNotes = noteRepository.findAllByUser(user).stream().filter(u -> !(u.isArchived() || u.isTrashed())).collect(Collectors.toList());
 		return allNotes;
 	}
 
@@ -139,7 +139,7 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.pinned.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.pinned.success"));
+					environment.getProperty("status.note.pinned.success"));
 		return response;
 	}
 
@@ -159,7 +159,7 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.trashed.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.trashed.success"));
+					environment.getProperty("status.note.trashed.success"));
 		return response;
 	}
 
@@ -179,7 +179,7 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.exists.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.archived.success"));
+					environment.getProperty("status.note.archived.success"));
 		return response;
 	}
 
@@ -211,7 +211,7 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.update.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.addLabel.success"));
+					environment.getProperty("status.note.addLabel.success"));
 		return response;
 	}
 
@@ -232,10 +232,10 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.update.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.removeLabel.success"));
+					environment.getProperty("status.note.removeLabel.success"));
 		return response;
 	}
-	
+
 	public Response addReminder(String userToken, long noteId,String reminder) {
 		long userId = tokenGenerator.retrieveIdFromToken(userToken);
 		User user = userRepository.findById(userId).get();
@@ -246,11 +246,11 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.update.error"));
 		else {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.addReminder.success"));
+					environment.getProperty("status.note.addReminder.success"));
 		}
 		return response;
 	}
-	
+
 	public Response removeReminder(String userToken, long noteId) {
 		long userId = tokenGenerator.retrieveIdFromToken(userToken);
 		User user = userRepository.findById(userId).get();
@@ -261,8 +261,47 @@ public class NoteServiceImpl implements NoteService{
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),environment.getProperty("status.note.update.error"));
 		else {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.note.removeReminder.success"));
+					environment.getProperty("status.note.removeReminder.success"));
 		}
 		return response;
+	}
+	@Override
+	public Response addCollaborator(long noteId , String userToken, String email) {
+		long ownerId = tokenGenerator.retrieveIdFromToken(userToken);
+		User ownerUser = userRepository.findById(ownerId).get();
+		Note note = noteRepository.findByIdAndUser(noteId,ownerUser).get();
+		Optional<User> optionalUser =userRepository.findByEmail(email);
+		if(optionalUser.isPresent() && optionalUser.get().isVerified()) {
+			User user = userRepository.findByEmail(email).get();
+			if(note.getCollaboratedUsers().contains(user))
+				throw new UserException(Integer.parseInt(environment.getProperty("status.collaborator.errorCode")), environment.getProperty("status.collaborator.duplicateUser"));
+			note.addCollaboratedUser(user);
+			user.addCollaboratedNote(note);
+			noteRepository.save(note);
+			userRepository.save(user);
+			return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
+					environment.getProperty("status.collaborator.success"));
+		}
+		//user not yet verified
+		else if(optionalUser.isPresent() && !optionalUser.get().isVerified())
+			throw new UserException(Integer.parseInt(environment.getProperty("status.login.errorCode")), environment.getProperty("status.login.unVerifiedUser"));
+		else //throw user doesn't exists
+			throw new UserException(Integer.parseInt(environment.getProperty("status.user.errorCode")), environment.getProperty("status.user.existError"));
+	}
+	@Override
+	public Response removeCollaborator(long noteId , String userToken, String email) {
+		long ownerId = tokenGenerator.retrieveIdFromToken(userToken);
+		User ownerUser = userRepository.findById(ownerId).get();
+		Note note = noteRepository.findByIdAndUser(noteId,ownerUser).get();
+		User collaboratedUser = userRepository.findByEmail(email).get();
+		if(collaboratedUser.getId() != ownerId ) {
+		note.removeCollaboratedUser(collaboratedUser);
+		userRepository.save(collaboratedUser);
+		collaboratedUser.removeCollaboratedNote(note);
+		noteRepository.save(note);
+		return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
+				environment.getProperty("status.collaborator.remove.success"));
+		}
+	    throw new UserException(Integer.parseInt(environment.getProperty("status.collaborator.errorCode")), environment.getProperty("status.collaborator.remove.error"));
 	}
 }

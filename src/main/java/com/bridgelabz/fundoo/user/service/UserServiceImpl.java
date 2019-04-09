@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
 		{
 			throw new UserException(Integer.parseInt(environment.getProperty("status.dataSaving.errorCode")),environment.getProperty("status.saveError"));
 		}
-		String userActivationLink = Utility.getHostPublicIP() + ":" +environment.getProperty("server.port") + "/user/useractivation/";
+		String userActivationLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port") + "/user/useractivation/";
 		userActivationLink = userActivationLink + tokenGenerator.generateUserToken(user.getId());
 		//publish message to the queue in rabbitmq server
 		messagePublisherImpl.publishMessage(userActivationLink);
@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseToken login(LoginDTO loginDTO) {
-		Optional<User> user = userRepository.findUserByEmail(loginDTO.getEmail());
+		Optional<User> user = userRepository.findByEmail(loginDTO.getEmail());
 		if (user.isPresent() && bCryptPasswordEncoder.matches(loginDTO.getPassword(), user.get().getPassword())) {
 			if (user.get().isVerified()) {
 				String token = tokenGenerator.generateUserToken(user.get().getId());
@@ -114,10 +114,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public Response passwordRecovery(String email) {
-		Optional<User> user = userRepository.findUserByEmail(email);
+		Optional<User> user = userRepository.findByEmail(email);
 		if(!user.isPresent())
 			throw new UserException(Integer.parseInt(environment.getProperty("status.forgotPassword.errorCode")), environment.getProperty("status.forgotPassword.invalidEmail"));
-		String passwordResetLink = Utility.getHostPublicIP() + ":" +environment.getProperty("server.port")+"/user/resetpassword/";
+		String passwordResetLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port")+"/user/resetpassword/";
 		passwordResetLink = passwordResetLink + tokenGenerator.generateUserToken(user.get().getId());
 		//publish message to the queue in rabbitmq server
 		messagePublisherImpl.publishMessage(passwordResetLink);
@@ -144,7 +144,7 @@ public class UserServiceImpl implements UserService {
     
 	@Override
 	public boolean isDuplicateUserByEmail(String email) {
-		if (userRepository.findUserByEmail(email).isPresent())
+		if (userRepository.findByEmail(email).isPresent())
 			return true;
 		else
 			return false;
@@ -161,6 +161,4 @@ public class UserServiceImpl implements UserService {
 		Long userId = tokenGenerator.retrieveIdFromToken(token);
 		return amazonService.getProfilePicFromS3Bucket(userId);
 	}
-	
-	
 }
