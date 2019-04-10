@@ -28,8 +28,6 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
-	private MailService mailService;
-	@Autowired
 	private TokenGenerator tokenGenerator;
 	@Autowired
 	private ModelMapper modelMapper;
@@ -63,13 +61,8 @@ public class UserServiceImpl implements UserService {
 		}
 		String userActivationLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port") + "/user/useractivation/";
 		userActivationLink = userActivationLink + tokenGenerator.generateUserToken(user.getId());
-		//publish message to the queue in rabbitmq server
-		messagePublisherImpl.publishMessage(userActivationLink);
-		//consume message from the queue in rabbitmq server
-		//for(int i=0;i<100000;i++);
-		userActivationLink  = messageConsumer.getMessage();
-		System.out.println("userActivationLink = "+userActivationLink);
-		mailService.sendEmail(user.getEmail(),"User registration verification",userActivationLink);
+		messageConsumer.emailDetails(user, "User registration verification");
+		messagePublisherImpl.publishMessage(userActivationLink); //publish message to the queue in rabbitmq server
 		Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 				environment.getProperty("status.register.success"));
 		return response;
@@ -119,11 +112,8 @@ public class UserServiceImpl implements UserService {
 			throw new UserException(Integer.parseInt(environment.getProperty("status.forgotPassword.errorCode")), environment.getProperty("status.forgotPassword.invalidEmail"));
 		String passwordResetLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port")+"/user/resetpassword/";
 		passwordResetLink = passwordResetLink + tokenGenerator.generateUserToken(user.get().getId());
-		//publish message to the queue in rabbitmq server
-		messagePublisherImpl.publishMessage(passwordResetLink);
-		//consume message from the queue in rabbitmq server
-		passwordResetLink  = messageConsumer.getMessage();
-		mailService.sendEmail(user.get().getEmail(),"Password Recovery Link",passwordResetLink);
+		messageConsumer.emailDetails(user.get(), "Password Reset Link");
+		messagePublisherImpl.publishMessage(passwordResetLink);  //publish message to the queue in rabbitmq server
 		Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 				environment.getProperty("status.forgotPassword.success"));
 		return response;
@@ -141,7 +131,7 @@ public class UserServiceImpl implements UserService {
 			throw new UserException(Integer.parseInt(environment.getProperty("status.dataSaving.errorCode")), environment.getProperty("status.saveError"));
 		return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),environment.getProperty("status.resetPassword.success"));
 	}
-    
+
 	@Override
 	public boolean isDuplicateUserByEmail(String email) {
 		if (userRepository.findByEmail(email).isPresent())
