@@ -18,12 +18,11 @@ import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-
 import com.bridgelabz.fundoo.user.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 @Entity
 public class Note implements Serializable {
@@ -46,48 +45,26 @@ public class Note implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(nullable = false)
 	@OnDelete(action = OnDeleteAction.CASCADE)
-	//@JsonIgnore
+	@JsonIgnore
 	private User user;
 
 	//@JsonIgnore
-	@ManyToMany(cascade = {
-			CascadeType.PERSIST,
-			CascadeType.MERGE
-	})
+	@ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 	@JoinTable(name = "note_label", joinColumns = @JoinColumn(name = "note_id"), 
 	inverseJoinColumns = @JoinColumn(name = "label_id"))
 	//@OnDelete(action = OnDeleteAction.CASCADE)
 	private Set<Label> labels;
-	//collaborator
-	@JsonIgnore
-	@ManyToMany(cascade = {
-			CascadeType.PERSIST,
-			CascadeType.MERGE
-	})
-	@JoinTable(name = "collaborator", joinColumns = @JoinColumn(name = "note_id"), 
-	inverseJoinColumns = @JoinColumn(name = "user_id"))
-	List<User> collaboratedUsers;
 
-	public boolean addCollaboratedUser(User user) {
-		return collaboratedUsers.add(user);
-	}
-	public boolean removeCollaboratedUser(User user) {
-			return collaboratedUsers.remove(user);
-	}
-	
-	public List<User> getCollaboratedUsers() {
-		return collaboratedUsers;
-	}
-	public void setCollaboratedUsers(List<User> collaboratedUsers) {
-		this.collaboratedUsers = collaboratedUsers;
-	}
-	//
+	//collaborator
+	//@JsonIgnore
+	@ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+	@JoinTable(name = "collaborator", joinColumns = @JoinColumn(name = "note_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+	private List<User> collaboratedUsers;
+
 	/**
 	 * default constructor
 	 */
 	public Note() {
-		this.collaboratedUsers = new ArrayList<>();
-		this.addCollaboratedUser(this.user);
 	}
 
 	public void setId(long id) {
@@ -185,6 +162,12 @@ public class Note implements Serializable {
 	public void setLabels(Set<Label> labels) {
 		this.labels = labels;
 	}
+	public List<User> getCollaboratedUsers() {
+		return collaboratedUsers;
+	}
+	public void setCollaboratedUsers(List<User> collaboratedUsers) {
+		this.collaboratedUsers = collaboratedUsers;
+	}
 
 	public boolean addLabel(Label label) {
 		if (labels == null)
@@ -195,7 +178,18 @@ public class Note implements Serializable {
 	public boolean removeLabel(Label label) {
 		return labels.remove(label);
 	}
+	//collaborator methods
+	public boolean addCollaboratedUser(User user) {
+		if(this.collaboratedUsers == null)
+			this.collaboratedUsers = new ArrayList<>();
+		return collaboratedUsers.add(user);
+	}
+	public boolean removeCollaboratedUser(User user) {
+		return collaboratedUsers.remove(user);
+	}
 
+	
+	//
 	@Override
 	public String toString() {
 		String str = "Note [ id = " + id + ", title = " + title + ", description = " + description + ", color = "

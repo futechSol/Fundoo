@@ -120,6 +120,8 @@ public class NoteServiceImpl implements NoteService{
 			throw new UserException(Integer.parseInt(environment.getProperty("status.login.errorCode")), environment.getProperty("status.user.existError"));
 		User user = opUser.get();
 		List<Note> allNotes = noteRepository.findAllByUser(user).stream().filter(u -> !(u.isArchived() || u.isTrashed())).collect(Collectors.toList());
+		List<Note> collabNotes = user.getCollaboratedNotes();
+		allNotes.addAll(collabNotes);
 		return allNotes;
 	}
 

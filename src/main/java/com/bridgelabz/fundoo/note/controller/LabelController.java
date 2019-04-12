@@ -69,7 +69,7 @@ public class LabelController {
 	}
 
 	@GetMapping(value="users/notes/labels")
-	public ResponseEntity<Object> allLabelsOfUser(@RequestHeader String token) {
+	public ResponseEntity<Object> getAllLabelsOfUser(@RequestHeader String token) {
 		logger.info("token : " +  token);
 		Object response;
 		try {
