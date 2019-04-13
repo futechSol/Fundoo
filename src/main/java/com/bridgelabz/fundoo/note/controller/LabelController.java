@@ -21,13 +21,13 @@ import com.bridgelabz.fundoo.note.service.LabelService;
 import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.util.ResponseInfo;
 
-@RestController
+@RestController("/notes/labels")
 public class LabelController {
 	private static final Logger logger = LoggerFactory.getLogger(LabelController.class);
 	@Autowired
 	private LabelService labelService;
 
-	@PostMapping(value="users/notes/labels")
+	@PostMapping
 	public ResponseEntity<Object> addLabel(@Valid @RequestBody LabelDTO labelDTO, @RequestHeader String token) {
 		logger.info("LabelDTO : " +  labelDTO);
 		logger.info("token : " +  token);
@@ -47,7 +47,7 @@ public class LabelController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PutMapping(value="users/notes/labels/{id}")
+	@PutMapping("/{id}")
 	public ResponseEntity<Response> updateLabel(@Valid @RequestBody LabelDTO labelDTO, @PathVariable long id,@RequestHeader String token) {
 		logger.info("LabelDTO : " +  labelDTO);
 		logger.info("token : " +  token);
@@ -60,7 +60,7 @@ public class LabelController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@DeleteMapping(value="users/notes/labels/{id}")
+	@DeleteMapping("/{id}")
 	public ResponseEntity<Response> deleteLabel(@PathVariable long id,@RequestHeader String token) {
 		logger.info("token : " +  token);
 		logger.info("id : " +  id);
@@ -68,7 +68,7 @@ public class LabelController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping(value="users/notes/labels")
+	@GetMapping
 	public ResponseEntity<Object> getAllLabelsOfUser(@RequestHeader String token) {
 		logger.info("token : " +  token);
 		Object response;
@@ -80,9 +80,8 @@ public class LabelController {
 		}
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	//comment it later
 
-	@GetMapping(value="users/notes/labels/{id}")
+	@GetMapping("/{id}")
 	public ResponseEntity<Object> getLabel(@PathVariable long id, @RequestHeader String token) {
 		logger.info("token : " +  token);
 		Object response;

@@ -91,7 +91,27 @@
 			<artifactId>aws-java-sdk</artifactId>
 			<version>1.11.529</version>
 		</dependency>
+		<!-- Elasticsearch Dependencies -->
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
+		</dependency>
 
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-high-level-client</artifactId>
+			</dependency>
+
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-client-sniffer</artifactId>
+			<version>6.1.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>

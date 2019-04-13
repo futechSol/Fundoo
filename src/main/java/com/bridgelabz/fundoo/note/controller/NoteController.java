@@ -27,13 +27,13 @@ import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.user.dto.LoginDTO;
 import com.bridgelabz.fundoo.util.ResponseInfo;
 
-@RestController
+@RestController("/notes")
 public class NoteController {
 	private static final Logger logger = LoggerFactory.getLogger(NoteController.class);
 	@Autowired
 	private NoteService noteService;
 
-	@PostMapping(value = "users/notes")
+	@PostMapping
 	public ResponseEntity<Response> create(@RequestBody NoteDTO noteDTO, @RequestHeader String token) {
 		logger.info("NoteDTO : " + noteDTO);
 		logger.trace("Note Creation");
@@ -45,7 +45,7 @@ public class NoteController {
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
-	@PutMapping(value = "users/notes/{id}")
+	@PutMapping("/{id}")
 	public ResponseEntity<Response> update(@Valid @RequestBody NoteDTO noteDTO, @RequestHeader String token, @PathVariable long id) {
 		logger.info("NoteDTO : " + noteDTO);
 		logger.trace("Note updating");
@@ -53,7 +53,7 @@ public class NoteController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@DeleteMapping(value = "users/notes/{id}")
+	@DeleteMapping("/{id}")
 	public ResponseEntity<Response> delete(@RequestHeader String token, @PathVariable long id) {
 		logger.info("Token: " + token);
 		logger.info("NoteId : " + id);
@@ -62,7 +62,7 @@ public class NoteController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping(value = "users/notes")
+	@GetMapping
 	public ResponseEntity<Object> getAllNotes(@RequestHeader String token) {
 		logger.info("token : " + token);
 		logger.trace("Geting all notes");
@@ -76,7 +76,7 @@ public class NoteController {
 		return new ResponseEntity<>(obj,HttpStatus.OK);
 	}
 
-	@GetMapping(value = "users/notes/{id}")
+	@GetMapping("/{id}")
 	public ResponseEntity<Object> getNote(@RequestHeader String token, @PathVariable long id) {
 		logger.info("token: " + token);
 		logger.trace("Get Note By id");
@@ -95,7 +95,7 @@ public class NoteController {
 		return new ResponseEntity<>(obj,HttpStatus.OK);
 	}
 
-	@PutMapping(value = "users/notes/pin/{id}")
+	@PutMapping("/pin/{id}")
 	public ResponseEntity<Response> pinNote(@RequestHeader String token, @PathVariable long id){
 		logger.info("token: " + token);
 		logger.trace("Pin Note By id");
@@ -103,7 +103,7 @@ public class NoteController {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 
-	@PutMapping(value = "users/notes/trash/{id}")
+	@PutMapping("/trash/{id}")
 	public ResponseEntity<Response> trashNote(@RequestHeader String token, @PathVariable long id){
 		logger.info("token: " + token);
 		logger.trace("Pin Note By id");
@@ -111,7 +111,7 @@ public class NoteController {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 
-	@PutMapping(value = "users/notes/archive/{id}")
+	@PutMapping("/archive/{id}")
 	public ResponseEntity<Response> archiveNote(@RequestHeader String token, @PathVariable long id){
 		logger.info("token: " + token);
 		logger.trace("Archive Note By id");
@@ -119,7 +119,7 @@ public class NoteController {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 
-	@PostMapping(value = "users/notes/{noteId}/labels")
+	@PostMapping("/{noteId}/labels")
 	public ResponseEntity<Response> addLabel(@RequestHeader String token, @PathVariable long noteId, @RequestBody LabelDTO labelDTO){
 		logger.info("token: " + token);
 		logger.trace("add label to note");
@@ -131,7 +131,7 @@ public class NoteController {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
-	@PutMapping(value = "users/notes/{noteId}/labels")
+	@PutMapping("/{noteId}/labels")
 	public ResponseEntity<Response> removeLabel(@RequestHeader String token, @PathVariable long noteId, @RequestBody LabelDTO labelDTO){
 		logger.info("token: " + token);
 		logger.trace("remove label to note");
@@ -143,21 +143,21 @@ public class NoteController {
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	
-	@PostMapping(value = "users/notes/{noteId}/reminder")
+	@PostMapping("/{noteId}/reminder")
 	public ResponseEntity<Response> addReminder(@RequestHeader String token, @PathVariable long noteId, @RequestBody ReminderDTO reminderDTO){
 		logger.info("token: " + token);
 		logger.trace("add reminder to note");
 		Response response = noteService.addReminder(token, noteId, reminderDTO.getReminder());
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-	@PutMapping(value = "users/notes/{noteId}/reminder")
+	@PutMapping("/{noteId}/reminder")
 	public ResponseEntity<Response> removeReminder(@RequestHeader String token, @PathVariable long noteId){
 		logger.info("token: " + token);
 		logger.trace("add reminder to note");
 		Response response = noteService.removeReminder(token, noteId);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-	@PostMapping(value = "users/notes/{noteId}/collaborator")
+	@PostMapping("/{noteId}/collaborator")
 	public ResponseEntity<Response> addCollaborator(@RequestHeader String token, @PathVariable long noteId, @RequestBody LoginDTO email){
 		logger.info("token :    "+token);
 		logger.info("noteId :   "+ noteId);
@@ -166,7 +166,7 @@ public class NoteController {
 		Response response = noteService.addCollaborator(noteId, token, email.getEmail());
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-	@PutMapping(value = "users/notes/{noteId}/collaborator")
+	@PutMapping("/{noteId}/collaborator")
 	public ResponseEntity<Response> removeCollaborator(@RequestHeader String token, @PathVariable long noteId, @RequestBody LoginDTO email){
 		logger.info("token :    "+token);
 		logger.info("noteId :   "+ noteId);

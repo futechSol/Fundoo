@@ -31,7 +31,7 @@ import com.bridgelabz.fundoo.user.service.UserService;
  * @version 1.0
  * @since 27-02-2019
  *********************************************************************************************/
-@RestController
+@RestController("/users")
 public class UserController {
 	@Autowired
 	private UserService userService;
@@ -46,7 +46,7 @@ public class UserController {
 	 * @param bindingResult
 	 * @return
 	 */
-	@PostMapping(value = "/user/register")
+	@PostMapping("/register")
 	public ResponseEntity<Response> register(@RequestBody UserDTO userDTO, BindingResult bindingResult) {
 		logger.info("UserDTO : " + userDTO);
 		logger.trace("User Registration");
@@ -60,8 +60,8 @@ public class UserController {
 	 * @param token user token
 	 * @return response
 	 */
-	@GetMapping(value = "/user/useractivation/{token}")
-	public ResponseEntity<Response> userVerification(@PathVariable String token) {
+	@GetMapping("/activation/{token}")
+	public ResponseEntity<Response> verify(@PathVariable String token) {
 		logger.info("token : " + token);
 		logger.trace("User Verification");
 		Response response = userService.verifyUser(token);
@@ -74,7 +74,7 @@ public class UserController {
 	 * @param bindingResult errors while binding the parameters
 	 * @return response
 	 */
-	@PostMapping(value = "/user/login")
+	@PostMapping("/login")
 	public ResponseEntity<ResponseToken> login(@RequestBody LoginDTO loginDTO, BindingResult bindingResult) {
 		logger.info("UserDTO : " + loginDTO);
 		logger.trace("User Login");
@@ -83,7 +83,7 @@ public class UserController {
 		return new ResponseEntity<ResponseToken>(responseToken, HttpStatus.OK);
 	}
 
-	@GetMapping(value = "/user/forgotpassword")
+	@GetMapping("/forgotpassword")
 	public ResponseEntity<Response> passwordRecovery(@RequestBody LoginDTO loginDTO, BindingResult bindingResult){
 		logger.info("user email : " + loginDTO.getEmail());
 		logger.trace("User Login");
@@ -92,7 +92,7 @@ public class UserController {
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 
-	@PutMapping(value="/user/resetpassword/{token}")
+	@PutMapping("/resetpassword/{token}")
 	public ResponseEntity<Response> resetPassword(@RequestBody LoginDTO loginDTO, BindingResult bindingResult, @PathVariable String token){
 		logger.info("user password : " + loginDTO.getEmail());
 		logger.trace("reset user password");
@@ -101,13 +101,13 @@ public class UserController {
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
     
-	@PostMapping("user/profilepic")
+	@PostMapping("/profilepic")
 	public ResponseEntity<Response> uploadProfilePicture(@RequestPart("multipartFile") MultipartFile multipartFile, @RequestHeader String token){
 		Response response = userService.uploadProfilePic(multipartFile, token);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 	
-	@GetMapping("user/profilepic")
+	@GetMapping("/profilepic")
 	public ResponseEntity<String> getProfilePicture(@RequestHeader String token){
 		return new ResponseEntity<>(userService.getProfilePic(token),HttpStatus.OK);
 	}
