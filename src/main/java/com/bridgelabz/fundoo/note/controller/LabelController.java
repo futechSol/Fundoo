@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.bridgelabz.fundoo.exception.LabelException;
 import com.bridgelabz.fundoo.exception.UserException;
@@ -21,7 +22,8 @@ import com.bridgelabz.fundoo.note.service.LabelService;
 import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.util.ResponseInfo;
 
-@RestController("/notes/labels")
+@RestController
+@RequestMapping("/notes/labels")
 public class LabelController {
 	private static final Logger logger = LoggerFactory.getLogger(LabelController.class);
 	@Autowired
@@ -68,7 +70,7 @@ public class LabelController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@GetMapping
+	@GetMapping()
 	public ResponseEntity<Object> getAllLabelsOfUser(@RequestHeader String token) {
 		logger.info("token : " +  token);
 		Object response;

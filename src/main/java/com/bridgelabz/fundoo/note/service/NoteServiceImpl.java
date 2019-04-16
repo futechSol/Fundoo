@@ -21,6 +21,8 @@ import com.bridgelabz.fundoo.note.repository.NoteRepository;
 import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.user.model.User;
 import com.bridgelabz.fundoo.user.repository.UserRepository;
+import com.bridgelabz.fundoo.user.service.MessageConsumer;
+import com.bridgelabz.fundoo.user.service.MessagePublisher;
 import com.bridgelabz.fundoo.util.ResponseInfo;
 import com.bridgelabz.fundoo.util.TokenGenerator;
 
@@ -39,6 +41,10 @@ public class NoteServiceImpl implements NoteService{
 	private ModelMapper modelMapper;
 	@Autowired
 	private Environment environment;
+	@Autowired
+	private MessagePublisher messagePublisherImpl;
+	@Autowired
+	private MessageConsumer messageConsumer;
 	private Response response;
 	@Override
 	public Response create(NoteDTO noteDTO, String userToken) {
@@ -49,6 +55,7 @@ public class NoteServiceImpl implements NoteService{
 		User user = opUser.get();
 		Note note = modelMapper.map(noteDTO, Note.class);
 		note.setUser(user);
+		//note.setColor("");
 		note.setCreatedDate(LocalDateTime.now());
 		note.setModifiedDate(LocalDateTime.now());
 		note = noteRepository.save(note);
@@ -67,13 +74,30 @@ public class NoteServiceImpl implements NoteService{
 		if(!(opUser.isPresent() && opUser.get().isVerified()))
 			return response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.login.errorCode")), environment.getProperty("status.user.existError"));
 		User user = opUser.get();
-		if(!noteRepository.findByIdAndUser(noteId, user).isPresent())
+		List<Note>collaboratedNotes = user.getCollaboratedNotes();
+		Note noteToUpdate = null;
+		if(noteRepository.findByIdAndUser(noteId, user).isPresent()) {
+			noteToUpdate = noteRepository.findByIdAndUser(noteId, user).get();
+		}
+		else if(collaboratedNotes != null && collaboratedNotes.size() > 0) //collaborated notes
+		{
+			for(Note note : collaboratedNotes) {
+				if(note.getId() == noteId) {
+					noteToUpdate = note;
+					break;
+				}
+			}
+		}
+		else if(noteToUpdate == null){
 			return response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")), environment.getProperty("status.note.exists.error"));
-		Note note = noteRepository.findByIdAndUser(noteId, user).get();
-		modelMapper.map(noteDTO, note);
-		note.setModifiedDate(LocalDateTime.now());
-		note = noteRepository.save(note);
-		if(note == null)
+		}
+		if(!(noteDTO.getTitle() == null || noteDTO.getTitle().equals("")))
+			noteToUpdate.setTitle(noteDTO.getTitle());
+		if(!(noteDTO.getDescription() == null || noteDTO.getDescription().equals("")))
+			noteToUpdate.setDescription(noteDTO.getDescription());
+		noteToUpdate.setModifiedDate(LocalDateTime.now());
+		noteToUpdate = noteRepository.save(noteToUpdate);
+		if(noteToUpdate == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")), environment.getProperty("status.note.update.error"));
 		else 
 			response =  ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
@@ -281,6 +305,9 @@ public class NoteServiceImpl implements NoteService{
 			user.addCollaboratedNote(note);
 			noteRepository.save(note);
 			userRepository.save(user);
+			messageConsumer.emailDetails(user, user.getFirstName() +" shared a note with you : "+note.getTitle());
+			String message = "Note details \n note title = "+ note.getTitle()+"\n description = " +note.getDescription();
+			messagePublisherImpl.publishMessage(message);
 			return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.collaborator.success"));
 		}
@@ -297,13 +324,13 @@ public class NoteServiceImpl implements NoteService{
 		Note note = noteRepository.findByIdAndUser(noteId,ownerUser).get();
 		User collaboratedUser = userRepository.findByEmail(email).get();
 		if(collaboratedUser.getId() != ownerId ) {
-		note.removeCollaboratedUser(collaboratedUser);
-		userRepository.save(collaboratedUser);
-		collaboratedUser.removeCollaboratedNote(note);
-		noteRepository.save(note);
-		return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-				environment.getProperty("status.collaborator.remove.success"));
+			note.removeCollaboratedUser(collaboratedUser);
+			userRepository.save(collaboratedUser);
+			collaboratedUser.removeCollaboratedNote(note);
+			noteRepository.save(note);
+			return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
+					environment.getProperty("status.collaborator.remove.success"));
 		}
-	    throw new UserException(Integer.parseInt(environment.getProperty("status.collaborator.errorCode")), environment.getProperty("status.collaborator.remove.error"));
+		throw new UserException(Integer.parseInt(environment.getProperty("status.collaborator.errorCode")), environment.getProperty("status.collaborator.remove.error"));
 	}
 }

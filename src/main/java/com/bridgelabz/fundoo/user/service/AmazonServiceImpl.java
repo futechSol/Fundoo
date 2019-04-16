@@ -41,6 +41,7 @@ public class AmazonServiceImpl implements AmazonService {
 	private Environment environment;
 
 	private AmazonS3 amazonS3Client; 
+	
 	@Value("${aws.s3.accesskey}")
 	private String accessKey;
 	@Value("${aws.s3.secretKey}")

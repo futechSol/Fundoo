@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,8 @@ import com.bridgelabz.fundoo.user.service.UserService;
  * @version 1.0
  * @since 27-02-2019
  *********************************************************************************************/
-@RestController("/users")
+@RestController
+@RequestMapping("/users")
 public class UserController {
 	@Autowired
 	private UserService userService;

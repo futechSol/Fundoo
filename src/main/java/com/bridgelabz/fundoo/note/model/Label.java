@@ -35,8 +35,7 @@ public class Label implements Serializable{
 	@JsonIgnore
 	private User user;
     @JsonIgnore
-	@ManyToMany(mappedBy = "labels")//, cascade = { CascadeType.PERSIST,CascadeType.MERGE})
-	//@OnDelete(action = OnDeleteAction.CASCADE)
+	@ManyToMany(mappedBy = "labels")
 	private Set<Note> notes;
 
 	/**

@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,10 +11,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotEmpty;
-
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import com.bridgelabz.fundoo.note.model.Note;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -52,8 +46,7 @@ public class User implements Serializable {
 	private boolean isVerified;
 	// collaborator for notes
 	@JsonIgnore
-	@ManyToMany(mappedBy = "collaboratedUsers", cascade = { CascadeType.PERSIST,CascadeType.MERGE})
-	@OnDelete(action = OnDeleteAction.CASCADE)
+	@ManyToMany(mappedBy = "collaboratedUsers")
 	private List<Note> collaboratedNotes;
 
 

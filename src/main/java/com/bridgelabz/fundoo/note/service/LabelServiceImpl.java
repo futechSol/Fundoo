@@ -15,7 +15,9 @@ import com.bridgelabz.fundoo.exception.LabelException;
 import com.bridgelabz.fundoo.exception.UserException;
 import com.bridgelabz.fundoo.note.dto.LabelDTO;
 import com.bridgelabz.fundoo.note.model.Label;
+import com.bridgelabz.fundoo.note.model.Note;
 import com.bridgelabz.fundoo.note.repository.LabelRepository;
+import com.bridgelabz.fundoo.note.repository.NoteRepository;
 import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.user.model.User;
 import com.bridgelabz.fundoo.user.repository.UserRepository;
@@ -30,13 +32,15 @@ public class LabelServiceImpl implements LabelService {
 	@Autowired
 	private LabelRepository labelRepository;
 	@Autowired
+	private NoteRepository noteRepository;
+	@Autowired
 	private UserRepository userRepository;
 	@Autowired 
 	private ModelMapper modelMapper;
 	@Autowired
 	private Environment environment;
 	private Response response;
-	
+
 	@Override
 	public Label create(LabelDTO labelDTO, String userToken) throws UserException, LabelException{
 		long userId = tokenGenerator.retrieveIdFromToken(userToken);
@@ -64,7 +68,7 @@ public class LabelServiceImpl implements LabelService {
 		Optional<User> opUser = userRepository.findById(userId);
 		if(!(opUser.isPresent() && opUser.get().isVerified()))
 			return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.login.errorCode")),environment.getProperty("status.user.existErrorr"));
-		//check for non-existance
+		//check for non-existence
 		if(!labelRepository.findByIdAndUser(id, opUser.get()).isPresent())
 			return  ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.label.errorCode")), environment.getProperty("status.label.exists.error"));
 		//check for duplicate entry
@@ -79,7 +83,7 @@ public class LabelServiceImpl implements LabelService {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.label.errorCode")), environment.getProperty("status.label.update.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),environment.getProperty("status.label.update.success"));
-	    return response;
+		return response;
 	}
 
 	@Override
@@ -88,17 +92,26 @@ public class LabelServiceImpl implements LabelService {
 		Optional<User> opUser = userRepository.findById(userId);
 		if(!(opUser.isPresent() && opUser.get().isVerified()))
 			return  ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.login.errorCode")),environment.getProperty("status.user.existError"));
-		//check for non-existance
+		//check for non-existence
 		Optional<Label> opLabel = labelRepository.findByIdAndUser(id, opUser.get());
 		if(!opLabel.isPresent())
 			return  ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.label.errorCode")), environment.getProperty("status.label.exists.error"));
+		//remove the associated notes
+		Label label = opLabel.get(); 
+		Set<Note> associatedNotes = label.getNotes();
+		for(Note n : associatedNotes) 
+		{ 
+			n.removeLabel(label);
+			noteRepository.save(n);
+		}
 		labelRepository.deleteById(id);
-		//check deletion is successfull or not
+
+		//check deletion is successful or not
 		if(labelRepository.findByIdAndUser(id, opUser.get()).isPresent())
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.label.errorCode")),environment.getProperty("status.label.delete.error"));
 		else
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")), environment.getProperty("status.label.delete.success"));
-	    return response;
+		return response;
 	}
 
 	@Override
@@ -109,7 +122,7 @@ public class LabelServiceImpl implements LabelService {
 			throw new UserException(Integer.parseInt(environment.getProperty("status.login.errorCode")),environment.getProperty("status.user.existError"));
 		return labelRepository.findAllByUser(opUser.get());
 	}
-	
+
 	public Label getLabel(long id, String userToken) {
 		long userId = tokenGenerator.retrieveIdFromToken(userToken);
 		Optional<User> opUser = userRepository.findById(userId);

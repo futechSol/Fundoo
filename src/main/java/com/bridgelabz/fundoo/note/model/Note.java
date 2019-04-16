@@ -52,7 +52,7 @@ public class Note implements Serializable {
 	@ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 	@JoinTable(name = "note_label", joinColumns = @JoinColumn(name = "note_id"), 
 	inverseJoinColumns = @JoinColumn(name = "label_id"))
-	//@OnDelete(action = OnDeleteAction.CASCADE)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Set<Label> labels;
 
 	//collaborator

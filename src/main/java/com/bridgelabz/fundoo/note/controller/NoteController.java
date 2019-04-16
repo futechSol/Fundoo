@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bridgelabz.fundoo.exception.NoteException;
@@ -27,7 +28,8 @@ import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.user.dto.LoginDTO;
 import com.bridgelabz.fundoo.util.ResponseInfo;
 
-@RestController("/notes")
+@RestController
+@RequestMapping("/notes")
 public class NoteController {
 	private static final Logger logger = LoggerFactory.getLogger(NoteController.class);
 	@Autowired
