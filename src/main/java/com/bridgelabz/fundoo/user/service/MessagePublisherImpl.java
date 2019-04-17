@@ -6,6 +6,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,11 +21,11 @@ public class MessagePublisherImpl implements MessagePublisher {
 	private static final Logger logger = LoggerFactory.getLogger(MessagePublisherImpl.class);
 	
 	@Override
-	public void publishMessage(String message) {
-		logger.info("published message = " + message);
+	public void publishMessage(SimpleMailMessage mail) {
+		logger.info("published message = " + mail);
 		logger.info("exchange = "+exchange);
 		logger.info("routingKey = "+routingKey);
-		amqpTemplate.convertAndSend(exchange, routingKey, message);
+		amqpTemplate.convertAndSend(exchange, routingKey, mail);
 	}
 
 }

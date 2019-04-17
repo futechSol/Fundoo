@@ -21,6 +21,6 @@ public interface UserService {
    Response passwordRecovery(String email);
    Response resetPassword(String newPassword, String token);
    Response uploadProfilePic(MultipartFile  multipartFile, String token);
-   String getProfilePic(String token);
+   Response getProfilePic(String token);
    boolean isDuplicateUserByEmail(String email);
 }

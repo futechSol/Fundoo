@@ -15,17 +15,27 @@ public class MailService {
 	private JavaMailSender javaMailSender;
 	@Autowired 
 	private Environment environment; 
+    /**
+     * sends the mail to a specific user
+     * @param mail SimpleMailMessage instance
+     */
+	public void sendEmail(SimpleMailMessage mail) {
+		javaMailSender.send(mail);
+	}
+	
 	/**
-	 * sending the mail to activate user
-	 * @param user User instance to be activated
+	 * returns a SimpleMailMessage instance with the given parameters
+	 * @param to
+	 * @param subject
+	 * @param text
+	 * @return
 	 */
-	public void sendEmail(String to, String subject, String message) {
+	public SimpleMailMessage getMailMessageObject(String to, String subject, String text) {
 		SimpleMailMessage mail = new SimpleMailMessage();
 		mail.setTo(to);
-		// get 'from' value from the property file
-		mail.setFrom(this.environment.getProperty("spring.mail.username"));
 		mail.setSubject(subject);
-		mail.setText(message);
-		javaMailSender.send(mail);
+		mail.setText(text);
+		mail.setFrom(this.environment.getProperty("spring.mail.username"));
+		return mail;
 	}
 }

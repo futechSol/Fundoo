@@ -52,7 +52,7 @@ public class AmazonServiceImpl implements AmazonService {
 	private String endpointUrl;
 
 	@PostConstruct
-	private void initializeAmazon() {
+	private void initializeAmazonClient() {
 		//this.amazonS3Client = new AmazonS3Client(new BasicAWSCredentials(ConstantUtils.ACCESS_KEY, ConstantUtils.SECRET_KEY));
 		BasicAWSCredentials creds = new BasicAWSCredentials(this.accessKey, this.secretKey);
 		amazonS3Client = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(creds)).withRegion(Regions.AP_SOUTH_1).build();

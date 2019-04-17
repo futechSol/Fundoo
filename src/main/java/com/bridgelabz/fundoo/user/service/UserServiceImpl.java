@@ -7,6 +7,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,7 +39,7 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private MessagePublisherImpl messagePublisherImpl;
 	@Autowired
-	private MessageConsumer messageConsumer;
+	private MailService mailService;
 	@Autowired
 	private AmazonService amazonService;
 
@@ -59,10 +60,10 @@ public class UserServiceImpl implements UserService {
 		{
 			throw new UserException(Integer.parseInt(environment.getProperty("status.dataSaving.errorCode")),environment.getProperty("status.saveError"));
 		}
-		String userActivationLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port") + "/user/useractivation/";
+		String userActivationLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port") + "/users/activation/";
 		userActivationLink = userActivationLink + tokenGenerator.generateUserToken(user.getId());
-		messageConsumer.emailDetails(user, "User registration verification");
-		messagePublisherImpl.publishMessage(userActivationLink); //publish message to the queue in rabbitmq server
+		SimpleMailMessage mail = mailService.getMailMessageObject(user.getEmail(), "User registration verification", userActivationLink);
+		messagePublisherImpl.publishMessage(mail); //publish message to the queue in rabbitmq server
 		Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 				environment.getProperty("status.register.success"));
 		return response;
@@ -110,10 +111,10 @@ public class UserServiceImpl implements UserService {
 		Optional<User> user = userRepository.findByEmail(email);
 		if(!user.isPresent())
 			throw new UserException(Integer.parseInt(environment.getProperty("status.forgotPassword.errorCode")), environment.getProperty("status.forgotPassword.invalidEmail"));
-		String passwordResetLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port")+"/user/resetpassword/";
+		String passwordResetLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port")+"/users/resetpassword/";
 		passwordResetLink = passwordResetLink + tokenGenerator.generateUserToken(user.get().getId());
-		messageConsumer.emailDetails(user.get(), "Password Reset Link");
-		messagePublisherImpl.publishMessage(passwordResetLink);  //publish message to the queue in rabbitmq server
+		SimpleMailMessage mail = mailService.getMailMessageObject(user.get().getEmail(), "Password Reset Link", passwordResetLink);
+		messagePublisherImpl.publishMessage(mail); //publish message to the queue in rabbitmq server
 		Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 				environment.getProperty("status.forgotPassword.success"));
 		return response;
@@ -147,8 +148,9 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public String getProfilePic(String token) {
+	public Response getProfilePic(String token) {
 		Long userId = tokenGenerator.retrieveIdFromToken(token);
-		return amazonService.getProfilePicFromS3Bucket(userId);
+		String str = amazonService.getProfilePicFromS3Bucket(userId);
+		return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")), str);
 	}
 }

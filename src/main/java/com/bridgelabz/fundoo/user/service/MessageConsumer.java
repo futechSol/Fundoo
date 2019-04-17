@@ -1,8 +1,7 @@
 package com.bridgelabz.fundoo.user.service;
 
-import com.bridgelabz.fundoo.user.model.User;
+import org.springframework.mail.SimpleMailMessage;
 
 public interface MessageConsumer {
-	 void recieveMessage(String msg);
-	 void emailDetails(User to, String subject);
+	 void recieveMessage(SimpleMailMessage mail);
 }

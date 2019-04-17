@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bridgelabz.fundoo.exception.NoteException;
@@ -120,8 +121,14 @@ public class NoteController {
 		Response response = noteService.archiveNote(token, id);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
-
-	@PostMapping("/{noteId}/labels")
+   
+	@PutMapping("/color/{id}")
+	public ResponseEntity<Response> colorNote(@RequestHeader String token, @PathVariable long id,@RequestParam String color){
+		logger.info("color: " + color);
+		logger.trace("Add color to Note By id");
+		Response response = noteService.addColor(token, id, color);
+		return new ResponseEntity<>(response,HttpStatus.OK);
+	} 
 	public ResponseEntity<Response> addLabel(@RequestHeader String token, @PathVariable long noteId, @RequestBody LabelDTO labelDTO){
 		logger.info("token: " + token);
 		logger.trace("add label to note");

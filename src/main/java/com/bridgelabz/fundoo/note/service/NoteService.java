@@ -22,4 +22,5 @@ public interface NoteService {
 	Response removeReminder(String userToken, long noteId);
 	Response addCollaborator(long noteId , String userToken, String email);
 	Response removeCollaborator(long noteId , String userToken, String email);
+	Response addColor(String userToken, long noteId, String color);
 }

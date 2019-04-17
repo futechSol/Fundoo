@@ -28,7 +28,7 @@ public class AmqpConfig {
 	Queue queue() {
 		return new Queue(queue,false);
 	}
-
+   
 	@Bean
 	Binding binding(Queue queue, DirectExchange exchange) {
 		return BindingBuilder.bind(queue).to(exchange).with(routingKey);

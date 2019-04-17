@@ -8,6 +8,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.bridgelabz.fundoo.response.Response;
 
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
 /********************************************************************************************
  * Purpose : Contains the application configurations and bean definitions.
  *           
@@ -16,6 +21,7 @@ import com.bridgelabz.fundoo.response.Response;
  * @since 26-02-2019
  *********************************************************************************************/
 @Configuration
+@EnableSwagger2
 public class AppConfig {
 	/**
 	 * ModelMapper to map the DTO to actual model
@@ -42,4 +48,15 @@ public class AppConfig {
 	{
 		return new Response();
 	}
+	/**
+	 * swagger bean
+	 * @return
+	 */
+	@Bean
+	public Docket productApi() {
+		return new Docket(DocumentationType.SWAGGER_2).select().apis(RequestHandlerSelectors.basePackage("com.bridgelabz.fundoo")).build();
+	}
+	
 }
+
+

@@ -21,7 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.bridgelabz.fundoo.exception.UserException;
 import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.response.ResponseToken;
+import com.bridgelabz.fundoo.user.dto.ForgotPasswordDTO;
 import com.bridgelabz.fundoo.user.dto.LoginDTO;
+import com.bridgelabz.fundoo.user.dto.ResetPasswordDTO;
 import com.bridgelabz.fundoo.user.dto.UserDTO;
 import com.bridgelabz.fundoo.user.service.UserService;
 
@@ -85,21 +87,21 @@ public class UserController {
 		return new ResponseEntity<ResponseToken>(responseToken, HttpStatus.OK);
 	}
 
-	@GetMapping("/forgotpassword")
-	public ResponseEntity<Response> passwordRecovery(@RequestBody LoginDTO loginDTO, BindingResult bindingResult){
-		logger.info("user email : " + loginDTO.getEmail());
-		logger.trace("User Login");
+	@PostMapping("/forgotpassword")
+	public ResponseEntity<Response> passwordRecovery(@RequestBody ForgotPasswordDTO forgotPasswordDTO, BindingResult bindingResult){
+		logger.info("user email : " + forgotPasswordDTO.getEmail());
+		logger.trace("User Forget Password");
 		checkBindingResultError(bindingResult);
-		Response response = userService.passwordRecovery(loginDTO.getEmail());
+		Response response = userService.passwordRecovery(forgotPasswordDTO.getEmail());
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
 
 	@PutMapping("/resetpassword/{token}")
-	public ResponseEntity<Response> resetPassword(@RequestBody LoginDTO loginDTO, BindingResult bindingResult, @PathVariable String token){
-		logger.info("user password : " + loginDTO.getEmail());
+	public ResponseEntity<Response> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO, BindingResult bindingResult, @PathVariable String token){
+		logger.info("user password : " + resetPasswordDTO.getPassword());
 		logger.trace("reset user password");
 		checkBindingResultError(bindingResult);
-		Response response = userService.resetPassword(loginDTO.getPassword(), token);
+		Response response = userService.resetPassword(resetPasswordDTO.getPassword(), token);
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
     
@@ -110,7 +112,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/profilepic")
-	public ResponseEntity<String> getProfilePicture(@RequestHeader String token){
+	public ResponseEntity<Response> getProfilePicture(@RequestHeader String token){
 		return new ResponseEntity<>(userService.getProfilePic(token),HttpStatus.OK);
 	}
 	
