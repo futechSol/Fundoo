@@ -19,10 +19,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.IOUtils;
@@ -115,8 +113,8 @@ public class AmazonServiceImpl implements AmazonService {
 	 * @param file file to be uploaded
 	 */
 	private void uploadImageFileTos3bucket(String fileName, File file) {
-		amazonS3Client.putObject(new PutObjectRequest(bucketName, fileName, file)
-				.withCannedAcl(CannedAccessControlList.PublicRead));
+		amazonS3Client.putObject(bucketName, fileName, file);
+		//putObject(new PutObjectRequest(bucketName, fileName, file).withCannedAcl(CannedAccessControlList.PublicRead));
 	}
 
 	private void deleteProfilePicFromS3Bucket(String fileURL) {
