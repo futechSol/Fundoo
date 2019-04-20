@@ -14,7 +14,7 @@ public class MessageConsumerImpl implements MessageConsumer {
     private static final Logger logger = LoggerFactory.getLogger(MessageConsumerImpl.class);
 	
     @Override
-	@RabbitListener(queues="${spring.rabbitmq.template.default-receive-queue}")
+	@RabbitListener(queues="${spring.rabbitmq.user.queue}")
 	public void recieveMessage(SimpleMailMessage mail) {
 		logger.info("consumed message = "+ mail.toString());
 		mailService.sendEmail(mail);

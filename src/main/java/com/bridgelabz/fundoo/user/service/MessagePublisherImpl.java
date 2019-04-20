@@ -16,16 +16,16 @@ public class MessagePublisherImpl implements MessagePublisher {
 	private AmqpTemplate amqpTemplate;
 	@Value("${spring.rabbitmq.template.exchange}")
 	private String exchange;
-	@Value("${spring.rabbitmq.template.routing-key}")
-	private String routingKey;
+	@Value("${spring.rabbitmq.user.routingKey}")
+	private String userRoutingKey;
 	private static final Logger logger = LoggerFactory.getLogger(MessagePublisherImpl.class);
 	
 	@Override
 	public void publishMessage(SimpleMailMessage mail) {
 		logger.info("published message = " + mail);
 		logger.info("exchange = "+exchange);
-		logger.info("routingKey = "+routingKey);
-		amqpTemplate.convertAndSend(exchange, routingKey, mail);
+		logger.info("routingKey = "+userRoutingKey);
+		amqpTemplate.convertAndSend(exchange, userRoutingKey, mail);
 	}
 
 }

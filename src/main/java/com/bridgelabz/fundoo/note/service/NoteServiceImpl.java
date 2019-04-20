@@ -29,6 +29,7 @@ import com.bridgelabz.fundoo.util.TokenGenerator;
 @Service
 @PropertySource("classpath:status.properties")
 public class NoteServiceImpl implements NoteService {
+
 	@Autowired
 	private TokenGenerator tokenGenerator;
 	@Autowired
@@ -45,6 +46,9 @@ public class NoteServiceImpl implements NoteService {
 	private MessagePublisher messagePublisherImpl;
 	@Autowired
 	private MailService mailService;
+	@Autowired
+	private NoteElasticSearch noteElasticSearch;
+
 	private Response response;
 
 	@Override
@@ -62,12 +66,15 @@ public class NoteServiceImpl implements NoteService {
 		note.setCreatedDate(LocalDateTime.now());
 		note.setModifiedDate(LocalDateTime.now());
 		note = noteRepository.save(note);
-		if (note == null)
+
+		if (note == null) {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.errorMessage"));
-		else
+		}else {
+			noteElasticSearch.insertNote(note);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.create.success"));
+		}
 		return response;
 	}
 
@@ -106,10 +113,12 @@ public class NoteServiceImpl implements NoteService {
 		if (noteToUpdate == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.update.error"));
-		else
+		else {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.update.success"));
-		return response;
+			noteElasticSearch.updateNoteById(noteToUpdate);
+		}
+			return response;
 	}
 
 	@Override
@@ -130,9 +139,11 @@ public class NoteServiceImpl implements NoteService {
 		if (noteRepository.findByIdAndUser(noteId, user).isPresent())
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.delete.error"));
-		else
+		else {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.delete.success"));
+		    noteElasticSearch.deleteNoteById(String.valueOf(noteId));
+		}
 		return response;
 	}
 

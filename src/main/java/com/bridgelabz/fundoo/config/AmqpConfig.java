@@ -11,26 +11,44 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AmqpConfig {
-	
+
 	@Value("${spring.rabbitmq.template.exchange}")
 	private String exchange;
-	@Value("${spring.rabbitmq.template.default-receive-queue}")
-	private String queue;
-	@Value("${spring.rabbitmq.template.routing-key}")
-	private String routingKey;
-	
+
+	@Value("${spring.rabbitmq.user.queue}")
+	private String userQueue;
+	@Value("${spring.rabbitmq.user.routingKey}")
+	private String userRoutingKey;
+
+	@Value("${spring.rabbitmq.note.queue}")
+	private String noteQueue;
+	@Value("${spring.rabbitmq.note.routingKey}")
+	private String noteRoutingKey;
+
 	@Bean
 	Exchange exchage() {
 		return new DirectExchange(exchange);
 	}
 
-	@Bean
-	Queue queue() {
-		return new Queue(queue,false);
+	@Bean(name = "userQueue")
+	Queue userQueue() {
+		return new Queue(userQueue, false);
 	}
-   
+
 	@Bean
-	Binding binding(Queue queue, DirectExchange exchange) {
-		return BindingBuilder.bind(queue).to(exchange).with(routingKey);
+	Binding userQueueBinding(Queue userQueue, DirectExchange exchange) {
+		return BindingBuilder.bind(userQueue).to(exchange).with(userRoutingKey);
 	}
+
+	@Bean(name = "noteQueue")
+	Queue noteQueue() {
+		return new Queue(noteQueue, false);
+	}
+	
+	@Bean
+	Binding noteQueueBinding(Queue noteQueue, DirectExchange exchange) 
+	{ 
+		return  BindingBuilder.bind(noteQueue).to(exchange).with(noteRoutingKey);
+	}
+
 }
