@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
 		String userActivationLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port") + "/users/activation/";
 		userActivationLink = userActivationLink + tokenGenerator.generateUserToken(user.getId());
 		SimpleMailMessage mail = mailService.getMailMessageObject(user.getEmail(), "User registration verification", userActivationLink);
-		messagePublisherImpl.publishMessage(mail); //publish message to the queue in rabbitmq server
+		messagePublisherImpl.publishUserMail(mail); //publish message to the queue in rabbitmq server
 		Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 				environment.getProperty("status.register.success"));
 		return response;
@@ -114,7 +114,7 @@ public class UserServiceImpl implements UserService {
 		String passwordResetLink = Utility.getLocalHostIPaddress() + ":" +environment.getProperty("server.port")+"/users/resetpassword/";
 		passwordResetLink = passwordResetLink + tokenGenerator.generateUserToken(user.get().getId());
 		SimpleMailMessage mail = mailService.getMailMessageObject(user.get().getEmail(), "Password Reset Link", passwordResetLink);
-		messagePublisherImpl.publishMessage(mail); //publish message to the queue in rabbitmq server
+		messagePublisherImpl.publishUserMail(mail); //publish message to the queue in rabbitmq server
 		Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 				environment.getProperty("status.forgotPassword.success"));
 		return response;

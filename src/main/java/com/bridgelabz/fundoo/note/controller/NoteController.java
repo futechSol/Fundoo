@@ -17,13 +17,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.bridgelabz.fundoo.exception.NoteException;
 import com.bridgelabz.fundoo.exception.UserException;
 import com.bridgelabz.fundoo.note.dto.LabelDTO;
 import com.bridgelabz.fundoo.note.dto.NoteDTO;
 import com.bridgelabz.fundoo.note.dto.ReminderDTO;
-import com.bridgelabz.fundoo.note.model.Note;
 import com.bridgelabz.fundoo.note.service.NoteService;
 import com.bridgelabz.fundoo.response.Response;
 import com.bridgelabz.fundoo.user.dto.LoginDTO;
@@ -86,8 +84,7 @@ public class NoteController {
 		Object obj;
 		try {
 			obj = noteService.getNote(token, id);
-			Note note = (Note)obj;
-			return new ResponseEntity<>(note,HttpStatus.OK);
+			return new ResponseEntity<>(obj,HttpStatus.OK);
 		}
 		catch(UserException e){
 			obj = ResponseInfo.getResponse(e.getErrorCode(),e.getMessage());
@@ -156,7 +153,7 @@ public class NoteController {
 	public ResponseEntity<Response> addReminder(@RequestHeader String token, @PathVariable long noteId, @RequestBody ReminderDTO reminderDTO){
 		logger.info("token: " + token);
 		logger.trace("add reminder to note");
-		Response response = noteService.addReminder(token, noteId, reminderDTO.getReminder());
+		Response response = noteService.addReminder(token, noteId, reminderDTO);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	}
 	@PutMapping("/{noteId}/reminder")

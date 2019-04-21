@@ -14,8 +14,11 @@ import com.bridgelabz.fundoo.exception.NoteException;
 import com.bridgelabz.fundoo.exception.UserException;
 import com.bridgelabz.fundoo.note.dto.LabelDTO;
 import com.bridgelabz.fundoo.note.dto.NoteDTO;
+import com.bridgelabz.fundoo.note.dto.ReminderDTO;
 import com.bridgelabz.fundoo.note.model.Label;
 import com.bridgelabz.fundoo.note.model.Note;
+import com.bridgelabz.fundoo.note.model.NoteContainer;
+import com.bridgelabz.fundoo.note.model.NoteOperation;
 import com.bridgelabz.fundoo.note.repository.LabelRepository;
 import com.bridgelabz.fundoo.note.repository.NoteRepository;
 import com.bridgelabz.fundoo.response.Response;
@@ -43,12 +46,12 @@ public class NoteServiceImpl implements NoteService {
 	@Autowired
 	private Environment environment;
 	@Autowired
-	private MessagePublisher messagePublisherImpl;
+	private MessagePublisher messagePublisher;
 	@Autowired
 	private MailService mailService;
 	@Autowired
 	private NoteElasticSearch noteElasticSearch;
-
+    private NoteContainer noteContainer;
 	private Response response;
 
 	@Override
@@ -71,7 +74,10 @@ public class NoteServiceImpl implements NoteService {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.errorMessage"));
 		}else {
-			noteElasticSearch.insertNote(note);
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.CREATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.create.success"));
 		}
@@ -114,9 +120,12 @@ public class NoteServiceImpl implements NoteService {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.update.error"));
 		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(noteToUpdate);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.update.success"));
-			noteElasticSearch.updateNoteById(noteToUpdate);
 		}
 			return response;
 	}
@@ -130,8 +139,8 @@ public class NoteServiceImpl implements NoteService {
 					Integer.parseInt(environment.getProperty("status.login.errorCode")),
 					environment.getProperty("status.user.existError"));
 		User user = opUser.get();
-
-		if (!noteRepository.findByIdAndUser(noteId, user).isPresent())
+        Optional<Note> opNote = noteRepository.findByIdAndUser(noteId, user);
+		if (!opNote.isPresent())
 			return response = ResponseInfo.getResponse(
 					Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.exists.error"));
@@ -140,15 +149,19 @@ public class NoteServiceImpl implements NoteService {
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.delete.error"));
 		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(opNote.get());
+			noteContainer.setNoteOperation(NoteOperation.DELETE);
+			messagePublisher.publishNoteData(noteContainer);
+
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.delete.success"));
-		    noteElasticSearch.deleteNoteById(String.valueOf(noteId));
 		}
 		return response;
 	}
 
 	@Override
-	public Note getNote(String userToken, long noteId) throws NoteException, UserException {
+	public Object getNote(String userToken, long noteId) throws NoteException, UserException {
 		long userId = tokenGenerator.retrieveIdFromToken(userToken);
 		Optional<User> opUser = userRepository.findById(userId);
 		if (!(opUser.isPresent() && opUser.get().isVerified()))
@@ -159,7 +172,8 @@ public class NoteServiceImpl implements NoteService {
 		if (!note.isPresent())
 			throw new NoteException(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.exists.error"));
-		return note.get();
+		//return note.get();
+		return noteElasticSearch.getNoteById(String.valueOf(noteId));
 	}
 
 	@Override
@@ -196,10 +210,15 @@ public class NoteServiceImpl implements NoteService {
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.pinned.error"));
-		else
+		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.pinned.success"));
-		return response;
+		}
+			return response;
 	}
 
 	@Override
@@ -221,10 +240,15 @@ public class NoteServiceImpl implements NoteService {
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.trashed.error"));
-		else
+		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.trashed.success"));
-		return response;
+		}
+			return response;
 	}
 
 	@Override
@@ -246,9 +270,14 @@ public class NoteServiceImpl implements NoteService {
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.archived.error"));
-		else
+		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.archived.success"));
+		}
 		return response;
 	}
 	@Override
@@ -270,9 +299,14 @@ public class NoteServiceImpl implements NoteService {
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.color.error"));
-		else
+		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.color.success"));
+		}
 		return response;
 	}
 
@@ -306,10 +340,15 @@ public class NoteServiceImpl implements NoteService {
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.update.error"));
-		else
+		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.addLabel.success"));
-		return response;
+		}
+			return response;
 	}
 
 	@Override
@@ -332,22 +371,32 @@ public class NoteServiceImpl implements NoteService {
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.update.error"));
-		else
+		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.removeLabel.success"));
+		}
 		return response;
 	}
 
-	public Response addReminder(String userToken, long noteId, String reminder) {
+	public Response addReminder(String userToken, long noteId, ReminderDTO reminderDTO) {
 		long userId = tokenGenerator.retrieveIdFromToken(userToken);
 		User user = userRepository.findById(userId).get();
 		Note note = noteRepository.findByIdAndUser(noteId, user).get();
-		note.setReminder(reminder);
+		note.setReminder(reminderDTO.getReminder());
+		note.setRepeatReminder(reminderDTO.getRepeatReminder());
 		note = noteRepository.save(note);
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.update.error"));
 		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.addReminder.success"));
 		}
@@ -359,11 +408,16 @@ public class NoteServiceImpl implements NoteService {
 		User user = userRepository.findById(userId).get();
 		Note note = noteRepository.findByIdAndUser(noteId, user).get();
 		note.setReminder(null);
+		note.setRepeatReminder(null);
 		note = noteRepository.save(note);
 		if (note == null)
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.note.errorCode")),
 					environment.getProperty("status.note.update.error"));
 		else {
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.note.removeReminder.success"));
 		}
@@ -387,13 +441,18 @@ public class NoteServiceImpl implements NoteService {
 						environment.getProperty("status.collaborator.duplicateUser"));
 			note.addCollaboratedUser(collaboratedUser);
 			collaboratedUser.addCollaboratedNote(note);
-			noteRepository.save(note);
+			note = noteRepository.save(note);
 			userRepository.save(collaboratedUser);
 			String message = "Note details \n note title = " + note.getTitle() + "\n description = "
 					+ note.getDescription();
 			SimpleMailMessage mail = mailService.getMailMessageObject(user.getEmail(),
 					user.getFirstName() + " shared a note with you : " + note.getTitle(), message);
-			messagePublisherImpl.publishMessage(mail);
+			messagePublisher.publishUserMail(mail);
+			//updating the corresponding note in ElasticSearch
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.collaborator.success"));
 		}
@@ -420,7 +479,12 @@ public class NoteServiceImpl implements NoteService {
 			collaboratedUser.removeCollaboratedNote(note);
 			userRepository.save(collaboratedUser);
 			note.removeCollaboratedUser(collaboratedUser);
-			noteRepository.save(note);
+			note = noteRepository.save(note);
+			//updating the corresponding note in ElasticSearch
+			noteContainer = new NoteContainer();
+			noteContainer.setNote(note);
+			noteContainer.setNoteOperation(NoteOperation.UPDATE);
+			messagePublisher.publishNoteData(noteContainer);
 			return ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
 					environment.getProperty("status.collaborator.remove.success"));
 		}

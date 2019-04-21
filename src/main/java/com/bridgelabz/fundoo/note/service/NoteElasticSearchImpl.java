@@ -27,6 +27,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.bridgelabz.fundoo.note.model.Note;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,42 +35,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class NoteElasticSearchImpl implements NoteElasticSearch{
-	private final String INDEX = "fundoo_noted_ata";
-	private final String TYPE = "notes";  
+	@Value("${elasticsearch.index}")
+	private String index;
+	@Value("${elasticsearch.type}")
+	private String type;
 	@Autowired
 	private RestHighLevelClient restHighLevelClient;
 	@Autowired
 	private ObjectMapper objectMapper;
 	private static final Logger logger = LoggerFactory.getLogger(NoteElasticSearchImpl.class);
-	/**
-	 * SEARCHes a note by title in elastic search
-	 * @param title title of the note
-	 * @return List of Note
-	 */
-	@Override
-	public List<Note> searchNoteByTitle(String title) {
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("title", title));
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(queryBuilder);
-        SearchRequest searchRequest = new SearchRequest();
-        searchRequest.source(searchSourceBuilder);
-        SearchResponse response = null;
-		try {
-			response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		}
-        return getSearchResult(response);
-    }
-	private List<Note> getSearchResult(SearchResponse response) {
-
-        SearchHit[] searchHit = response.getHits().getHits();
-        List<Note> notes = new ArrayList<>();
-        for (SearchHit hit : searchHit){
-        	notes.add(objectMapper.convertValue(hit.getSourceAsMap(), Note.class));
-        }
-        return notes;
-    }
+	
 	/**
 	 * INSERTs a note in ElasticSearch 
 	 * @param note Note instance to be inserted into ELasticSearch
@@ -79,7 +54,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch{
 	public Result insertNote(Note note){
 		@SuppressWarnings("unchecked")
 		Map<String, String> dataMap = objectMapper.convertValue(note, Map.class);
-		IndexRequest indexRequest = new IndexRequest(INDEX, TYPE, note.getId()+"").source(dataMap);
+		IndexRequest indexRequest = new IndexRequest(index, type, note.getId()+"").source(dataMap);
 		IndexResponse indexResponse = null;
 		try {
 			indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
@@ -101,7 +76,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch{
 	 * @return updated document
 	 */
 	public Map<String, Object> updateNoteById(Note note){
-		UpdateRequest updateRequest = new UpdateRequest(INDEX, TYPE, note.getId()+"")
+		UpdateRequest updateRequest = new UpdateRequest(index, type, note.getId()+"")
 				.fetchSource(true);    // Fetch Object after its update
 		Map<String, Object> error = new HashMap<>();
 		error.put("Error", "Unable to update note");
@@ -127,7 +102,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch{
      * @return Result
      */
 	public Result deleteNoteById(String id) {
-		DeleteRequest deleteRequest = new DeleteRequest(INDEX, TYPE, id);
+		DeleteRequest deleteRequest = new DeleteRequest(index, type, id);
 		DeleteResponse deleteResponse = null;
 		try {
 			deleteResponse = restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
@@ -143,7 +118,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch{
 	 * @return note instance as a Map
 	 */
 	public Map<String, Object> getNoteById(String id){
-		GetRequest getRequest = new GetRequest(INDEX, TYPE, id);
+		GetRequest getRequest = new GetRequest(index, type, id);
 		GetResponse getResponse = null;
 		try {
 			getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);
@@ -153,4 +128,35 @@ public class NoteElasticSearchImpl implements NoteElasticSearch{
 		Map<String, Object> sourceAsMap = getResponse.getSourceAsMap();
 		return sourceAsMap;
 	}
+	
+	/**
+	 * SEARCHes a note by title in elastic search
+	 * @param title title of the note
+	 * @return List of Note
+	 */
+	@Override
+	public List<Note> searchNoteByTitle(String title) {
+        QueryBuilder queryBuilder = QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("title", title));
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(queryBuilder);
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse response = null;
+		try {
+			response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+		}
+        return getSearchResult(response);
+    }
+	
+	private List<Note> getSearchResult(SearchResponse response) {
+
+        SearchHit[] searchHit = response.getHits().getHits();
+        List<Note> notes = new ArrayList<>();
+        for (SearchHit hit : searchHit){
+        	notes.add(objectMapper.convertValue(hit.getSourceAsMap(), Note.class));
+        }
+        return notes;
+    }
 }

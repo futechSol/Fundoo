@@ -41,6 +41,7 @@ public class Note implements Serializable {
 	private LocalDateTime createdDate;
 	private LocalDateTime modifiedDate;
 	private String reminder;
+	private String repeatReminder;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(nullable = false)
@@ -154,7 +155,15 @@ public class Note implements Serializable {
 	public void setReminder(String reminder) {
 		this.reminder = reminder;
 	}
+    
+	public String getRepeatReminder() {
+		return repeatReminder;
+	}
 
+	public void setRepeatReminder(String repeatReminder) {
+		this.repeatReminder = repeatReminder;
+	}
+	
 	public Set<Label> getLabels() {
 		return labels;
 	}
