@@ -12,4 +12,5 @@ public interface NoteElasticSearch {
 	Map<String, Object> updateNoteById(Note note);
 	Result deleteNoteById(String id);
 	Map<String, Object> getNoteById(String id);
+	List<Note> searchNoteByAnyText(String queryString);
 }

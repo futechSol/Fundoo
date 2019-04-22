@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -21,8 +20,6 @@ import javax.persistence.ManyToOne;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import com.bridgelabz.fundoo.user.model.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 
 @Entity
 public class Note implements Serializable {
@@ -43,10 +40,10 @@ public class Note implements Serializable {
 	private String reminder;
 	private String repeatReminder;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	//@JsonIgnore
+	@ManyToOne(fetch = FetchType.EAGER, optional = false)
 	@JoinColumn(nullable = false)
 	@OnDelete(action = OnDeleteAction.CASCADE)
-	@JsonIgnore
 	private User user;
 
 	//@JsonIgnore

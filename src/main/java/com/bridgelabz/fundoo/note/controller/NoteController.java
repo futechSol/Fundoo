@@ -126,6 +126,7 @@ public class NoteController {
 		Response response = noteService.addColor(token, id, color);
 		return new ResponseEntity<>(response,HttpStatus.OK);
 	} 
+	@PostMapping("/{noteId}/labels")
 	public ResponseEntity<Response> addLabel(@RequestHeader String token, @PathVariable long noteId, @RequestBody LabelDTO labelDTO){
 		logger.info("token: " + token);
 		logger.trace("add label to note");
@@ -180,6 +181,12 @@ public class NoteController {
 		logger.trace("add collaborator");
 		Response response = noteService.removeCollaborator(noteId, token, email.getEmail());
 		return new ResponseEntity<>(response,HttpStatus.OK);
+	}
+	
+	@GetMapping("/search")
+	public ResponseEntity<Object> searchNotes(@RequestParam String queryString){
+		Object response = noteService.searchNotes(queryString);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }
 

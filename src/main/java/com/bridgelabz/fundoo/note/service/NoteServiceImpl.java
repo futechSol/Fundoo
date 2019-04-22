@@ -491,4 +491,8 @@ public class NoteServiceImpl implements NoteService {
 		throw new UserException(Integer.parseInt(environment.getProperty("status.collaborator.errorCode")),
 				environment.getProperty("status.collaborator.remove.error"));
 	}
+	
+	public List<Note> searchNotes(String query) {
+		return noteElasticSearch.searchNoteByAnyText(query);
+	}
 }
