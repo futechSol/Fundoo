@@ -23,5 +23,5 @@ public interface NoteService {
 	Response addCollaborator(long noteId , String userToken, String email);
 	Response removeCollaborator(long noteId , String userToken, String email);
 	Response addColor(String userToken, long noteId, String color);
-	List<Note> searchNotes(String query);
+	List<Note> searchNotes(String query, String token);
 }

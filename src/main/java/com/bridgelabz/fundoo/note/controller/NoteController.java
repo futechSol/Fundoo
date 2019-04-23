@@ -184,8 +184,8 @@ public class NoteController {
 	}
 	
 	@GetMapping("/search")
-	public ResponseEntity<Object> searchNotes(@RequestParam String queryString){
-		Object response = noteService.searchNotes(queryString);
+	public ResponseEntity<Object> searchNotes(@RequestParam String queryString, @RequestHeader String token){
+		Object response = noteService.searchNotes(queryString, token);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 }

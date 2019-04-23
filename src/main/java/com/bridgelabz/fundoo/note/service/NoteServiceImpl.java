@@ -492,7 +492,13 @@ public class NoteServiceImpl implements NoteService {
 				environment.getProperty("status.collaborator.remove.error"));
 	}
 	
-	public List<Note> searchNotes(String query) {
-		return noteElasticSearch.searchNoteByAnyText(query);
+	public List<Note> searchNotes(String query, String token) {
+		long userId = tokenGenerator.retrieveIdFromToken(token);
+		Optional<User> opUser = userRepository.findById(userId);
+		if (!(opUser.isPresent() && opUser.get().isVerified()))
+			throw new UserException(Integer.parseInt(environment.getProperty("status.login.errorCode")),
+					environment.getProperty("status.user.existError"));
+		User user = userRepository.findById(userId).get();
+		return noteElasticSearch.searchNoteByAnyText(query, user);
 	}
 }

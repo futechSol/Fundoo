@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -32,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.bridgelabz.fundoo.note.model.Note;
+import com.bridgelabz.fundoo.user.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,7 +45,35 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 	@Autowired
 	private ObjectMapper objectMapper;
 	private static final Logger logger = LoggerFactory.getLogger(NoteElasticSearchImpl.class);
-
+    
+	/**
+	 * Searches notes for a given string and returns the list of matched Notes
+	 * @param queryString string to search across the notes
+	 * @param user User 
+	 * @return List<Note> which contain the queryString either in title or description or in labels 
+	 */
+	@Override
+	public List<Note> searchNoteByAnyText(String queryString, User user) 
+	{
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		QueryBuilder queryBuilder = QueryBuilders.boolQuery()
+				.must(QueryBuilders.queryStringQuery("*"+queryString+"*").analyzeWildcard(true).field("title", 2.0f)
+				.field("description").field("labels"))
+				.filter(QueryBuilders.termsQuery("user.id", String.valueOf(user.getId())));
+		
+		searchSourceBuilder.query(queryBuilder);
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest.source(searchSourceBuilder);
+		SearchResponse response = null;
+		try {
+			response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+		}
+		List<Note> allNotes = getSearchResult(response);
+		return allNotes;
+	}
+	
 	/**
 	 * INSERTs a note in ElasticSearch
 	 * 
@@ -81,9 +108,9 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 	 */
 	public Map<String, Object> updateNoteById(Note note) {
 		UpdateRequest updateRequest = new UpdateRequest(index, type, note.getId() + "").fetchSource(true); // Fetch
-																											// Object
-																											// after its
-																											// update
+		// Object
+		// after its
+		// update
 		Map<String, Object> error = new HashMap<>();
 		error.put("Error", "Unable to update note");
 		try {
@@ -160,6 +187,11 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 		return getSearchResult(response);
 	}
 
+	/**
+	 * returns list of Notes from the SearchResponse
+	 * @param response SearchResponse 
+	 * @return List<Note> or null
+	 */
 	private List<Note> getSearchResult(SearchResponse response) {
 
 		SearchHit[] searchHits = response.getHits().getHits();
@@ -168,29 +200,5 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 			notes.add(objectMapper.convertValue(hit.getSourceAsMap(), Note.class));
 		}
 		return notes;
-	}
-
-	@Override
-	public List<Note> searchNoteByAnyText(String queryString) {
-		long userId = 0;
-		QueryBuilder queryBuilder = QueryBuilders.boolQuery().should(QueryBuilders.queryStringQuery(queryString)
-				.analyzeWildcard(true).field("title", 2.0f).field("description").field("labels"));
-
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		searchSourceBuilder.query(queryBuilder);
-		SearchRequest searchRequest = new SearchRequest();
-		searchRequest.source(searchSourceBuilder);
-		SearchResponse response = null;
-		try {
-			response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		}
-		List<Note> allNotes = getSearchResult(response);
-		//List<Note> userNotes = allNotes.stream().filter(n -> n.getUser().getId() == userId).collect(Collectors.toList()); 
-		//User user = 
-		//List<Note> collaboratedNotes =
-		 
-		return allNotes;
 	}
 }
