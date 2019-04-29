@@ -2,9 +2,8 @@ package com.bridgelabz.fundoo.user.dto;
 
 import java.io.Serializable;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-
 import org.hibernate.validator.constraints.Length;
 
 /********************************************************************************************
@@ -19,7 +18,8 @@ public class LoginDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	@NotEmpty(message = "Enter email address")
-	@Pattern(regexp = "^[\\\\w-\\\\+]+(\\\\.[\\\\w]+)*@[\\\\w-]+(\\\\.[\\\\w]+)*(\\\\.[a-z]{2,})$", message="enetr valid email address..!")
+	//@Pattern(regexp = "^[\\\\w-\\\\+]+(\\\\.[\\\\w]+)*@[\\\\w-]+(\\\\.[\\\\w]+)*(\\\\.[a-z]{2,})$", message="enetr valid email address..!")
+	@Email
 	private String email;
 	@NotEmpty(message = "Enter password ...!")
 	@Length(min = 8, max = 32, message = "Password must be min 6 and max 32 chars long")

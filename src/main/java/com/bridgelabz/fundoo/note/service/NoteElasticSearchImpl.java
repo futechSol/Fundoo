@@ -2,6 +2,7 @@ package com.bridgelabz.fundoo.note.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 	@Autowired
 	private ObjectMapper objectMapper;
 	private static final Logger logger = LoggerFactory.getLogger(NoteElasticSearchImpl.class);
-    
+
 	/**
 	 * Searches notes for a given string and returns the list of matched Notes
 	 * @param queryString string to search across the notes
@@ -55,12 +56,11 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 	@Override
 	public List<Note> searchNoteByAnyText(String queryString, User user) 
 	{
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		QueryBuilder queryBuilder = QueryBuilders.boolQuery()
 				.must(QueryBuilders.queryStringQuery("*"+queryString+"*").analyzeWildcard(true).field("title", 2.0f)
-				.field("description").field("labels"))
+						.field("description").field("labels"))
 				.filter(QueryBuilders.termsQuery("user.id", String.valueOf(user.getId())));
-		
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		searchSourceBuilder.query(queryBuilder);
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest.source(searchSourceBuilder);
@@ -73,7 +73,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 		List<Note> allNotes = getSearchResult(response);
 		return allNotes;
 	}
-	
+
 	/**
 	 * INSERTs a note in ElasticSearch
 	 * 
@@ -107,10 +107,7 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 	 * @return updated document
 	 */
 	public Map<String, Object> updateNoteById(Note note) {
-		UpdateRequest updateRequest = new UpdateRequest(index, type, note.getId() + "").fetchSource(true); // Fetch
-		// Object
-		// after its
-		// update
+		UpdateRequest updateRequest = new UpdateRequest(index, type, note.getId() + "").fetchSource(true); // Fetch Object after its update
 		Map<String, Object> error = new HashMap<>();
 		error.put("Error", "Unable to update note");
 		try {
@@ -186,6 +183,27 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 		}
 		return getSearchResult(response);
 	}
+    
+	/**
+	 * fetches all the notes of a particular user by id
+	 * @param userId User id
+	 * @return returns List of notes
+	 */
+	public List<Note> getAllNotes(Long userId) {
+
+		QueryBuilder queryBuilder = QueryBuilders.boolQuery().filter(QueryBuilders.termQuery("user.id", String.valueOf(userId)));
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		searchSourceBuilder.query(queryBuilder);
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest.source(searchSourceBuilder);
+		try {
+			SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+			return getSearchResult(searchResponse);
+		} catch (IOException e) {
+			logger.error(e.getLocalizedMessage());
+		}
+		return null;
+	}
 
 	/**
 	 * returns list of Notes from the SearchResponse
@@ -195,10 +213,8 @@ public class NoteElasticSearchImpl implements NoteElasticSearch {
 	private List<Note> getSearchResult(SearchResponse response) {
 
 		SearchHit[] searchHits = response.getHits().getHits();
-		List<Note> notes = new ArrayList<>();
-		for (SearchHit hit : searchHits) {
-			notes.add(objectMapper.convertValue(hit.getSourceAsMap(), Note.class));
-		}
+		List<Note> notes = new ArrayList<>(); 
+		Arrays.stream(searchHits).forEach(a->notes.add(objectMapper.convertValue(a.getSourceAsMap(), Note.class)));
 		return notes;
 	}
 }

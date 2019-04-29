@@ -10,12 +10,11 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.bridgelabz.fundoo.exception.LabelException;
-import com.bridgelabz.fundoo.note.controller.NoteController;
 import com.bridgelabz.fundoo.note.dto.LabelDTO;
 
 
 public class Utility {
-	private static final Logger logger = LoggerFactory.getLogger(NoteController.class);
+	private static final Logger logger = LoggerFactory.getLogger(Utility.class);
     
 	/**
 	 * get the server local IP address

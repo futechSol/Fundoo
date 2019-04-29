@@ -13,7 +13,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.Verification;
-import com.bridgelabz.fundoo.FundooApplication;
 import com.bridgelabz.fundoo.exception.TokenException;
 
 @PropertySource("classpath:status.properties")
@@ -23,7 +22,7 @@ public class TokenGenerator {
 	@Autowired
 	private Environment environment;
 	private static String TOKEN_SECRET;
-	Logger logger = LoggerFactory.getLogger(FundooApplication.class);
+	Logger logger = LoggerFactory.getLogger(TokenGenerator.class);
 
 	/**
 	 * default constructor

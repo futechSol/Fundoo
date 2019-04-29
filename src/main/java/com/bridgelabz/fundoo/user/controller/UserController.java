@@ -121,9 +121,6 @@ public class UserController {
 			logger.error("Error while binding user details");
 			String statusMessge = environment.getProperty("status.bindingResult.invalidData");
 			int statusCode = Integer.parseInt(environment.getProperty("status.bindingResult.errorCode"));
-//			Response response = ResponseInfo.getResponse(Integer.parseInt(environment.getProperty("status.success.code")),
-//					environment.getProperty("status.forgotPassword.success"));
-//			return new ResponseEntity<Response>(response, HttpStatus.OK);
 			throw new UserException(statusCode, statusMessge);
 		}
 	}

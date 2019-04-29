@@ -49,23 +49,6 @@ public class User implements Serializable {
 	@ManyToMany(mappedBy = "collaboratedUsers")
 	private List<Note> collaboratedNotes;
 
-
-	public List<Note> getCollaboratedNotes() {
-		return collaboratedNotes;
-	}
-	public void setCollaboratedNotes(List<Note> collaboratedNotes) {
-		this.collaboratedNotes = collaboratedNotes;
-	}
-
-	public boolean addCollaboratedNote(Note note) {
-		if(this.collaboratedNotes == null)
-			this.collaboratedNotes = new ArrayList<>();
-		return this.collaboratedNotes.add(note);	
-	}
-	public boolean removeCollaboratedNote(Note note) {
-		return this.collaboratedNotes.remove(note);
-	}
-	//
 	/**
 	 * default constructor
 	 */
@@ -150,6 +133,23 @@ public class User implements Serializable {
 	public void setProfilePic(String profilePic) {
 		this.profilePic = profilePic;
 	}
+	
+	public List<Note> getCollaboratedNotes() {
+		return collaboratedNotes;
+	}
+	public void setCollaboratedNotes(List<Note> collaboratedNotes) {
+		this.collaboratedNotes = collaboratedNotes;
+	}
+
+	public boolean addCollaboratedNote(Note note) {
+		if(this.collaboratedNotes == null)
+			this.collaboratedNotes = new ArrayList<>();
+		return this.collaboratedNotes.add(note);	
+	}
+	public boolean removeCollaboratedNote(Note note) {
+		return this.collaboratedNotes.remove(note);
+	}
+	
 	@Override
 	public String toString() {
 		return "User[ id = " + id + ", firstName = " + firstName + ", lastName = " + lastName + ", phoneNumber = "
